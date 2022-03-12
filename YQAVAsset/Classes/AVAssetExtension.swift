@@ -112,7 +112,7 @@ extension AVAsset {
                 return
             }
             guard let exportSession = AVAssetExportSession(asset: self, presetName: presetName) else {
-                completion(.failure(XTError("AVAssetExportSession获取失败")))
+                completion(.failure(Egg("AVAssetExportSession获取失败")))
                 return
             }
             exportSession.outputURL = outputURL
@@ -130,7 +130,7 @@ extension AVAsset {
                 case .failed:
                     if tryIfNeed {
                         guard let lastPreset = AVAssetExportSession.exportPresets(compatibleWith: self).last else {
-                            completion(.failure(exportSession.error ?? XTError(490, message: "导出视频失败")))
+                            completion(.failure(exportSession.error ?? Egg(490, message: "导出视频失败")))
                             return
                         }
                         self.compressVideo(presetName: lastPreset, completion: completion, tryIfNeed: false)
