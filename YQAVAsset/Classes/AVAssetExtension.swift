@@ -7,47 +7,7 @@
 
 import Foundation
 import AVFoundation
-
-
-public struct Egg: Error, LocalizedError, CustomStringConvertible, CustomDebugStringConvertible {
-    let message: String?
-    let code: Int?
-
-    public var debugDescription: String {
-        var string: String = ""
-        if let code = code {
-            string += "code:\(code)"
-        }
-        if let message = message {
-            string += string.isEmpty ? "message:" : " message:"
-            string += message
-        }
-        return string.isEmpty ? "未知错误" : string
-    }
-
-    public var description: String {
-        if let message = message {
-            return message
-        }
-        if let code = code {
-            return "code:\(code)"
-        }
-        return "未知错误"
-    }
-
-    public var errorDescription: String? {
-        return description
-    }
-
-    public init(_ code: Int? = nil, message: String? = nil) {
-        self.code = code
-        self.message = message
-    }
-
-    public init(_ message: String? = nil) {
-        self.init(nil, message: message)
-    }
-}
+import SwiftEgg
 
 extension AVAsset {
     
@@ -97,15 +57,13 @@ extension AVAsset {
     /// 视频转码
     /// - Parameters:
     ///   - presetName: presetName
+    ///   - tempDirectory: 临时文件目录
     ///   - completion: completion
     ///   - tryIfNeed:  如果presetName不符合要求的话，会从符合的里选择最后一个重新导出
     ///   - returnOriginalDataIfFailed: 如果tryIfNeed为false，还无法导出的话就返回原始数据
-    public func compressVideo(presetName: String = AVAssetExportPresetHighestQuality, completion: @escaping (Result<URL, Error>) -> (), tryIfNeed: Bool = true, returnOriginalDataIfFailed: Bool = true) {
-        guard let outputPath = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first else {
-            completion(.failure(Egg("未获取到缓存路径")))
-            return
-        }
-        let outputURL = URL(fileURLWithPath: outputPath).appendingPathComponent("\(Int(Date().timeIntervalSince1970))\(arc4random()).mp4")
+    public func compressVideo(presetName: String = AVAssetExportPresetHighestQuality, tempDirectory: URL? = nil, completion: @escaping (Result<URL, Error>) -> (), tryIfNeed: Bool = true, returnOriginalDataIfFailed: Bool = true) {
+        let tempDirectory = tempDirectory ?? FileManager.default.temporaryDirectory
+        let outputURL = tempDirectory.appendingPathComponent("\(Int(Date().timeIntervalSince1970))\(arc4random()).mp4")
         AVAssetExportSession.determineCompatibility(ofExportPreset: presetName, with: self, outputFileType: .mp4) { allow in
             guard allow else {
                 completion(.failure(Egg(492, message: "无法导出视频")))
@@ -137,7 +95,7 @@ extension AVAsset {
                     } else {
                         if returnOriginalDataIfFailed {
                             guard let url = (self as? AVURLAsset)?.url else {
-                                completion(.failure(XTError("无法获取到原始文件地址")))
+                                completion(.failure(Egg("无法获取到原始文件地址")))
                                 return
                             }
                             do {
@@ -158,7 +116,6 @@ extension AVAsset {
                 }
             }
         }
-        
     }
 }
 
